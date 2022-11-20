@@ -1,0 +1,379 @@
+---
+title: "A Quick Overview of the naijR Package"
+subtitle: "Talk with the Abuja R User Group"
+date: "22 November, 2022"
+author: "Victor Ordu"
+format: revealjs
+execute: 
+  echo: true
+  warning: false
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+#| label: setup
+#| include: false
+header <- \(x, level = 2, markup = TRUE) {
+  stopifnot({
+    is.character(x)
+    is.numeric(level)
+    is.logical(markup)
+  })
+  slideTitle <- c(
+    outline = "Outline",
+    back = "Background",
+    challenges = "Challenges",
+    principles = "Design Principles",
+    use = "Usage",
+    install = "Installation",
+    states = "Administrative Regions: States",
+    lgas = "Administrative Regions: Local Government Areas",
+    helpers = "Helper Functions",
+    phone = "Phone Numbers",
+    map = "Maps",
+    concepts = "Combining Concepts",
+    future = "Prospects",
+    new = "Some New Ideas",
+    collab = "Collaboration",
+    resrc = "Resources"
+  )
+  
+  hdr <- slideTitle[x]
+  
+  if (markup)
+    hdr <- paste(strrep("#", level), hdr)
+  
+  if (level == 1)
+    hdr <- toupper(hdr)
+  
+  unname(hdr)
+}
+```
+
+`r header('outline')`
+
+- `r header('back', markup = FALSE)`
+- `r header('use', markup = FALSE)`
+- `r header('future', markup = FALSE)`
+
+`r header('back', 1)`
+
+`r header('challenges')`
+
+A suite of functions for:
+
+-   Data entry
+-   Data cleaning
+-   Accurate naming
+-   Visualization
+
+`r header('principles')`
+
+- Open-source and open development
+- Locally relevant
+- Meet global standards
+- Extensibility
+- Simplicity
+
+`r header('use', 1)`
+
+`r header('install')`
+
+-   Stable version:
+
+```{r}
+#| label: install-stable
+#| eval: false
+install.packages("naijR")
+```
+
+</br>
+
+-   Development version (`dev` branch)
+
+```{r}
+#| label: install-dev
+#| eval: false
+# install.packages('remotes')
+remotes::install_github("BroVic/naijR", ref = "dev")
+```
+
+`r header('states')`
+
+- Using strings i.e. character vectors
+
+```{r}
+#| label: state-as-strings
+s <- c("Adamawa", "Bauchi", "Borno", "Gombe", "Taraba", "Yobe")
+s
+```
+
+`r header('states')`
+
+- Using `states` objects (S3 classes)
+
+A special vector constructed with the `states()` function:
+
+```{r}
+#| label: state-object
+#| results: markup
+library(naijR)
+states()
+```
+
+`r header('states')`
+
+```{r}
+# Using earlier created vector
+(stateobj <- states(s))
+```
+
+`r header('states')`
+
+Objects representing the sub-national divisions inherit from an abstract class `regions` to confer a particular behaviour.
+
+-   `regions` is an abstract class i.e. it does not have constructible objects, but exists to define shared behaviour between `states` and `lgas`.
+
+```{r}
+#| label: states-class
+
+class(stateobj)
+```
+
+`r header('states')`
+
+`states` has additional arguments:  
+
+```{r}
+#| label: states-def
+#| echo: false
+args(states)
+```
+
+- `gpz` - a geopolitical zone (string) 
+- `all` - include FCT in the result? (logical)
+- `warn` - notify if an element is not a valid State (logical)
+
+`r header('lgas')`
+
+- As with States, we can use character vectors with the names of the LGA.
+- We can also create `lgas` objects - safer
+- LGAs present an additional challenge:
+  + Sheer number (774)
+  + Duplication of LGAs
+  + Ambiguity due to name-sharing
+
+--- 
+
+Because of this the function signature is more involved:
+
+```{r}
+#| label: lgas-def
+#| echo: false
+args(lgas)
+```
+
+Note:
+
+- `region` - i.e. one or more States (character vector only) or selected LGAs.
+- `strict` - use LGA when there is name-sharing (logical, default is `FALSE`).
+- `warn` - notify of wrong spelling (logical). 
+
+---
+
+`r header('helpers')`
+
+-   `is_*` - are elements of the object what they claim to be?
+-   `fix_*` - carry out repairs.
+
+Example:
+
+```{r}
+#| label: helpers
+#| results: markup
+#| error: true
+nas <- "Nassarawa"
+is_state(nas)
+
+nas <- fix_region(nas)
+nas <- fix_region(states(nas))
+is_state(nas)
+```
+
+---
+
+Fixing LGA spellings
+
+```{r}
+#| label: helpers-lga
+#| results: markup
+am <-
+  c("Amuwo-Olofin",
+    "Amuwo-Odofin",
+    "Amuwo-Odofin",
+    "Amuwu-Odofin")
+
+is_lga(am)
+
+am |>
+  fix_region() |>
+  is_lga()
+```
+
+---
+
+- Sometimes, LGAs cannot be repaired automatically
+- This occurs when there are too name clashes
+- The fixes can now be done interactively with the function `fix_region_manual()`.
+- See the article that describes how this is done by running the following code:
+
+```{r}
+#| label: vignette
+#| eval: false
+vignette("interactive", "naijR")
+```
+
+
+`r header('phone')`
+
+Deal with poorly entered phone numbers and MS Excel mutilations using `fix_mobile`.
+
+`r header('phone')`
+
+- Input numeric values...
+
+```{r}
+#| label: phone-num
+#| results: markup
+fix_mobile(8034510441)
+```
+
+`r header('phone')`
+
+- or strings...
+
+```{r}
+#| label: phone-str
+fix_mobile("8034510441")
+```
+
+---
+
+Numbers that cannot be repaired are turned into missing values i.e. `NA`s.
+
+```{r}
+nums <- c("8034510441", "070304", "09O14358956")
+fix_mobile(nums)
+```
+
+Note that one of the digits of `nums[3]` is not `0` but `O`. The function automatically repairs it.
+
+`r header('map')`
+
+- Plain plots - by default shows State boundaries
+
+```{r}
+#| label: map-plain
+map_ng()
+```
+
+`r header('map')`
+
+```{r}
+#| label: map-lga
+
+map_ng(lgas())
+```
+
+---
+
+```{r}
+#| label: map-args
+
+args(map_ng)
+```
+
+- Input options
+  + A collection of States or LGAs
+  + A data frame
+  + A collection of coordinates
+
+`r header('concepts')`
+
+What do you expect to be the result of the following code?
+
+```{r}
+#| label: map-bauchi-string
+#| eval: false
+map_ng("Bauchi")
+```
+
+Consider the following possibilities:
+
+- Bauchi is the name of a State in Nigeria.
+- Bauchi is the name of an LGA in Bauchi State of Nigeria.
+- We could draw a map of:
+  + Bauchi State
+  + All the LGAs in Bauchi State
+  + Bauchi LGA
+- This informed the **polymorphism** used in the package.
+
+---
+
+```{r}
+#| label: map-bauchi-string
+#| echo: true
+```
+
+---
+
+```{r}
+map_ng(states("Bauchi"), show.text = TRUE)
+```
+
+---
+
+```{r}
+map_ng(lgas("Bauchi"), show.text = T)
+```
+
+---
+
+```{r}
+map_ng(lgas("Bauchi", strict = T), show.text = T)
+```
+
+---
+
+We can also create choropleth maps using the `map_ng()` function. For more info, read the vignette
+
+```{r}
+vignette('nigeria-maps', 'naijR')
+```
+
+`r header("future", 1)`
+
+`r header('new')`
+The package is not yet feature complete. Many changes still ahead:
+
+- Provision of **richer** objects/methods
+- Introduction of compiled code i.e. low-level constructs (C/C++)
+- Link to Other Ecosystems
+- A case for political wards
+- More robust handling of phone numbers: Map to (inter)national standard
+- Connection to geospatial packages
+
+`r header('collab')`
+
+- The package is hosted publicly on GitHub and has a GPL-3 license, and thus open to modification, distribution, etc.
+- How to contribute:
+  + Issues
+  + Pull_Requests
+  + Documentation
+
+`r header('resrc')`
+- naijR website  - <http://brovic.github.io/naijR>
+- My personal blog - <https://victorordu.wordpress.com>
+
+To contact me, visit my GitHub profile: <https://github.com/BroVic>
