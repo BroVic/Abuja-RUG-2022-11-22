@@ -3,7 +3,7 @@ title: "A Quick Overview of the naijR Package"
 subtitle: "Talk with the Abuja R User Group"
 date: "22 November, 2022"
 author: "Victor Ordu"
-format: beamer
+format: revealjs
 execute: 
   echo: true
   warning: false
