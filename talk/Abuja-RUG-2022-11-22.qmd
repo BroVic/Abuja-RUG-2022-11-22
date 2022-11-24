@@ -3,12 +3,12 @@ title: "A Quick Overview of the naijR Package"
 subtitle: "Talk with the Abuja R User Group"
 date: "22 November, 2022"
 author: "Victor Ordu"
-format: revealjs
+format: beamer
 execute: 
   echo: true
   warning: false
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -349,6 +349,8 @@ map_ng(lgas("Bauchi", strict = T), show.text = T)
 We can also create choropleth maps using the `map_ng()` function. For more info, read the vignette
 
 ```{r}
+#| label: vignette-maps
+#| eval: false
 vignette('nigeria-maps', 'naijR')
 ```
 
